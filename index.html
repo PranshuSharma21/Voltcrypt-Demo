@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VOLTCRYPT — CDR / IPDR Forensic Analysis & AI Assistant</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">VC</div>
+        <div class="brand-text">
+          <div class="brand-name">VOLTCRYPT</div>
+          <div class="brand-sub">PS03 · TELECOM FORENSICS</div>
+        </div>
+      </div>
+
+      <div class="case-badge">
+        <div class="case-label">ACTIVE CASE FILE</div>
+        <div class="case-id">CASE-2026-DL-0418</div>
+        <div class="case-meta">2 CDR · 1 IPDR · 6 Towers · Synthetic</div>
+      </div>
+
+      <nav class="nav-list" aria-label="Primary Navigation">
+        <button class="nav-item active" data-view="overview">
+          <span class="nav-code">01</span>
+          <span class="nav-label">Overview &amp; Patterns</span>
+        </button>
+        <button class="nav-item" data-view="import">
+          <span class="nav-code">02</span>
+          <span class="nav-label">Import &amp; Normalise</span>
+        </button>
+        <button class="nav-item" data-view="network">
+          <span class="nav-code">03</span>
+          <span class="nav-label">Suspect Network</span>
+        </button>
+        <button class="nav-item" data-view="location">
+          <span class="nav-code">04</span>
+          <span class="nav-label">Towers &amp; IMEI/SIM</span>
+        </button>
+        <button class="nav-item" data-view="ipdr">
+          <span class="nav-code">05</span>
+          <span class="nav-label">IPDR Correlation</span>
+        </button>
+        <button class="nav-item" data-view="assistant">
+          <span class="nav-code">06</span>
+          <span class="nav-label">AI Investigator</span>
+          <span class="nav-pill" id="pinnedCountBadge">0</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="team-block">
+          <div class="team-title">TEAM VOLTCRYPT</div>
+          <div class="team-row"><span>Pranshu Sharma</span><em>Team Lead</em></div>
+          <div class="team-row"><span>Pranav Verma</span><em>UI / UX</em></div>
+          <div class="team-row"><span>Karan Kohli</span><em>Research &amp; Compliance</em></div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main-wrap">
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 id="viewTitle">Overview &amp; Communication Patterns</h1>
+          <span class="status-tag" id="datasetStatusTag">SYNTHETIC DEMO LOADED</span>
+        </div>
+        <div class="topbar-right">
+          <label class="role-picker">
+            <span>ROLE</span>
+            <select id="roleSelect">
+              <option value="Lead Investigator">Lead Investigator</option>
+              <option value="Forensic Analyst">Forensic Analyst</option>
+              <option value="Reviewing Officer">Reviewing Officer</option>
+            </select>
+          </label>
+          <button class="btn btn-outline" id="openAuditBtn">Audit Log (<span id="auditCount">0</span>)</button>
+          <button class="btn btn-amber" id="exportReportBtn">Export Draft Report</button>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <section class="view active" id="view-overview">
+          <div class="kpi-grid" id="kpiGrid"></div>
+
+          <div class="two-col">
+            <div class="card">
+              <div class="card-header">
+                <h2>24-Hour Call Intensity (Nocturnal Window Highlighted)</h2>
+                <span class="tag tag-crimson">23:00–05:00 RISK BAND</span>
+              </div>
+              <div class="heatmap-bars" id="hourlyChart"></div>
+              <div class="chart-legend">
+                <span><i class="dot dot-stone"></i>Daytime Activity</span>
+                <span><i class="dot dot-crimson"></i>Night-Time Window (23:00–05:00)</span>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h2>Top Contacts &amp; Call Direction Split</h2>
+                <span class="tag tag-amber" id="ioRatioTag">IN / OUT</span>
+              </div>
+              <div class="top-contacts-list" id="topContactsList"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Normalized Master CDR Evidence Ledger</h2>
+              <div class="filter-bar">
+                <input type="text" id="cdrSearchInput" placeholder="Search number, tower, IMEI, file..." />
+                <select id="cdrSuspectFilter">
+                  <option value="ALL">All Suspects</option>
+                  <option value="Suspect A">Suspect A (+91-98101-44011)</option>
+                  <option value="Suspect B">Suspect B (+91-98712-88204)</option>
+                </select>
+                <label class="checkbox-inline">
+                  <input type="checkbox" id="cdrNightFilter" />
+                  <span>Night Only</span>
+                </label>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Source &amp; Row</th>
+                    <th>Suspect</th>
+                    <th>Timestamp (IST)</th>
+                    <th>Other Party</th>
+                    <th>Type</th>
+                    <th>Dur (s)</th>
+                    <th>Tower</th>
+                    <th>IMEI</th>
+                    <th>Flags</th>
+                  </tr>
+                </thead>
+                <tbody id="cdrTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-import">
+          <div class="two-col">
+            <div class="card">
+              <div class="card-header">
+                <h2>Format-Agnostic CDR / IPDR Ingestion</h2>
+                <button class="btn btn-amber btn-sm" id="reloadDemoBtn">Reset Demo Dataset</button>
+              </div>
+              <div class="dropzone" id="csvDropzone">
+                <div class="dropzone-title">Drop Operator CDR CSV Here</div>
+                <div class="dropzone-sub">Auto-maps Airtel, Jio, Vi, or generic CSV columns into VOLTCRYPT Canonical Schema</div>
+                <input type="file" id="csvFileInput" accept=".csv" hidden />
+                <button class="btn btn-outline btn-sm" id="browseCsvBtn">Choose CSV File</button>
+              </div>
+              <div class="ingested-files" id="ingestedFilesList"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h2>Validation &amp; Anomaly Report</h2>
+                <span class="tag tag-emerald">SCHEMA NORMALIZED</span>
+              </div>
+              <div class="validation-summary" id="validationSummary"></div>
+              <div class="anomaly-list" id="validationAnomalies"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Operator-to-Canonical Column Mapping Matrix</h2>
+              <span class="tag tag-stone">MULTI-OPERATOR ENGINE</span>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Canonical Field</th>
+                    <th>Operator A (Airtel Schema)</th>
+                    <th>Operator B (Jio Schema)</th>
+                    <th>IPDR Schema</th>
+                    <th>Validation Rule</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td><code>record_id</code></td><td>Row Index</td><td>Row Index</td><td>Session Index</td><td>Required · Unique Citation Key</td></tr>
+                  <tr><td><code>msisdn_a</code></td><td><code>Calling_Party</code></td><td><code>A_Number</code></td><td><code>Subscriber_MSISDN</code></td><td>E.164 / 10-digit IST Normalization</td></tr>
+                  <tr><td><code>msisdn_b</code></td><td><code>Called_Party</code></td><td><code>B_Number</code></td><td><code>Dest_Service</code></td><td>Cross-Suspect Link Key</td></tr>
+                  <tr><td><code>timestamp_ist</code></td><td><code>Call_Start</code></td><td><code>Timestamp_IST</code></td><td><code>Session_Start</code></td><td>ISO-8601 +05:30 Alignment</td></tr>
+                  <tr><td><code>duration_sec</code></td><td><code>Dur_Sec</code></td><td><code>Duration</code></td><td><code>End - Start</code></td><td>Non-negative Integer</td></tr>
+                  <tr><td><code>tower_id</code></td><td><code>Cell_ID</code></td><td><code>Tower_Code</code></td><td>N/A</td><td>Joined with Cell-Tower Registry</td></tr>
+                  <tr><td><code>device_imei</code></td><td><code>Device_IMEI</code></td><td><code>IMEI</code></td><td>N/A</td><td>15-Digit Check · Swap Detection</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-network">
+          <div class="network-layout">
+            <div class="card graph-card">
+              <div class="card-header">
+                <h2>Cross-Suspect Contact Network Graph</h2>
+                <div class="filter-bar">
+                  <label class="checkbox-inline">
+                    <input type="checkbox" id="bridgeOnlyToggle" />
+                    <span>Common Bridge Numbers Only</span>
+                  </label>
+                </div>
+              </div>
+              <div class="graph-stage">
+                <svg id="networkSvg" viewBox="0 0 760 440" role="img" aria-label="Cross-suspect contact network graph"></svg>
+              </div>
+              <div class="chart-legend">
+                <span><i class="dot dot-crimson"></i>Primary Suspect</span>
+                <span><i class="dot dot-amber"></i>Common Shared Contact (Bridge)</span>
+                <span><i class="dot dot-stone"></i>Single-Suspect Contact</span>
+              </div>
+            </div>
+
+            <div class="card inspector-card">
+              <div class="card-header">
+                <h2>Node &amp; Link Inspector</h2>
+                <span class="tag tag-amber">CLICK NODE</span>
+              </div>
+              <div id="nodeInspector" class="inspector-body"></div>
+              <div class="divider-line"></div>
+              <div class="subhead">DETECTED COMMON CONTACTS</div>
+              <div id="commonContactsList" class="common-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-location">
+          <div class="two-col">
+            <div class="card">
+              <div class="card-header">
+                <h2>Cell-Tower Movement &amp; Co-Location Map</h2>
+                <select id="mapSuspectSelect">
+                  <option value="BOTH">Both Suspects (Co-Location)</option>
+                  <option value="Suspect A">Suspect A Path</option>
+                  <option value="Suspect B">Suspect B Path</option>
+                </select>
+              </div>
+              <div class="map-stage">
+                <svg id="towerMapSvg" viewBox="0 0 640 380" role="img" aria-label="Cell tower movement map"></svg>
+              </div>
+              <div class="colocation-banner" id="colocationBanner"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h2>IMEI / SIM Swap Detection</h2>
+                <span class="tag tag-crimson" id="swapCountTag">ALERTS</span>
+              </div>
+              <div class="swap-list" id="swapAlertsList"></div>
+              <div class="divider-line"></div>
+              <div class="subhead">CHRONOLOGICAL TOWER SEQUENCE</div>
+              <div class="timeline-list" id="towerTimelineList"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-ipdr">
+          <div class="card">
+            <div class="card-header">
+              <h2>CDR-to-IPDR Burst Correlator (Unique Signal)</h2>
+              <span class="tag tag-amber">±5 MIN WINDOW MATCH</span>
+            </div>
+            <div class="burst-grid" id="ipdrBurstGrid"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Normalized IPDR Session Records</h2>
+              <span class="tag tag-stone">ISP_IPDR_Sessions.csv</span>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Source &amp; Row</th>
+                    <th>Subscriber</th>
+                    <th>Public IP</th>
+                    <th>Src Port</th>
+                    <th>Service Indicator</th>
+                    <th>Session Window (IST)</th>
+                    <th>Up / Down (KB)</th>
+                  </tr>
+                </thead>
+                <tbody id="ipdrTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-assistant">
+          <div class="assistant-layout">
+            <div class="card chat-card">
+              <div class="card-header">
+                <h2>Evidence-Linked AI Investigation Assistant</h2>
+                <span class="tag tag-emerald">CITATION-LOCKED · EN / HI</span>
+              </div>
+
+              <div class="prompt-chips" id="promptChips">
+                <button class="chip" data-q="Who are the common contacts between Suspect A and Suspect B?">Common contacts (A &amp; B)</button>
+                <button class="chip" data-q="रात 11 से सुबह 5 बजे के बीच सबसे ज़्यादा कॉल किसे हुई?">Hindi: Night calls (11 PM–5 AM)</button>
+                <button class="chip" data-q="Detect all IMEI and SIM changes with timestamps">IMEI / SIM swaps</button>
+                <button class="chip" data-q="Show tower co-location between Suspect A and Suspect B">Tower co-location</button>
+                <button class="chip" data-q="Correlate IPDR sessions with voice calls">IPDR burst correlation</button>
+                <button class="chip chip-warn" data-q="What did Suspect A say on the call at 23:42?">Test Refusal (Out of Scope)</button>
+              </div>
+
+              <div class="chat-feed" id="chatFeed"></div>
+
+              <form class="chat-form" id="chatForm">
+                <input type="text" id="chatInput" placeholder="Ask in English or Hindi (e.g., top contacts, common numbers, IMEI swap, tower timeline)..." autocomplete="off" />
+                <button type="submit" class="btn btn-amber">Analyze</button>
+              </form>
+              <div class="guardrail-note">
+                Mandatory Verification Notice: AI responses are strictly bound to uploaded synthetic records and require officer sign-off before investigative use.
+              </div>
+            </div>
+
+            <div class="card pinned-card">
+              <div class="card-header">
+                <h2>Officer-Verified Findings</h2>
+                <span class="tag tag-amber" id="rolePermissionTag">CAN VERIFY</span>
+              </div>
+              <div id="pinnedFindingsList" class="pinned-list"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="auditModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>Accountability &amp; Query Audit Log</h2>
+        <button class="btn btn-outline btn-sm" id="closeAuditBtn">Close</button>
+      </div>
+      <div class="modal-body" id="auditLogList"></div>
+    </div>
+  </div>
+
+  <div class="toast hidden" id="toastBox"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
